@@ -1,0 +1,28 @@
+[
+    {
+        "titile" : "A Passage to India",
+        "author" : "E.M. Foster",
+        "Year": 1924,
+        "id" : 1
+    },
+    {
+        "titile" : "The Revenue Stamp",
+        "author" : "Amrita Pritam",
+        "Year": 1979,
+        "id" : 2
+    },
+    {
+        "titile" : "Death of a City",
+        "author" : "Amrita Pritam",
+        "Year": 1976,
+        "id" : 3
+    },
+    {
+        "titile" : "Pinjar",
+        "author" : "Amrita Pritam",
+        "Year": 1950,
+        "id" : 4
+    }
+]
+
+
