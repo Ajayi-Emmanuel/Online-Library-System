@@ -1,7 +1,7 @@
 [
     {
         "fullName": "Ajayi Emmanuel",
-        "Username": "Emmanuel101",
+        "username": "Emmanuel101",
         "email": "emmanueltemitayo056@gmail.com",
         "role": "admin",
         "phoneNumber": "09032608313",
@@ -9,9 +9,9 @@
     },
     {
         "fullName": "Ajayi Tosin",
-        "Username": "Tosin101",
+        "username": "Tosin101",
         "email": "ajayitosin056@gmail.com",
-        "role": "user",
+        "role": "reader",
         "phoneNumber": "09032608313",
         "password": "qwert21."
     }
