@@ -57,6 +57,7 @@ const CreateUser = function (req, res){
         const newUser = JSON.parse(parsedBody);
 
         usersDb.push(newUser);
+        console.log(usersDb)
         fs.writeFile(userFilePath, JSON.stringify(usersDb), (err) => {
             if (err){
                 console.log(err)
@@ -260,17 +261,20 @@ const LoanBook = function (req, res){
                 res.writeHead(400)
                 res.end("An error occured")
             }
+
             const booksObj = JSON.parse(books)
             const bookName = booksObj.find(book => book.title === bookTitle)
+            bookId = bookName.id
+            const bookIndex = booksObj.findIndex(book => book.id === bookId)
 
-            if (bookName === -1) {
+            if (bookIndex === -1) {
                 res.writeHead(404)
                 res.end("Book with the specified id not found!")
                 return
             }
-
+            
             bookLoanDb.push(bookName);
-            fs.writeFile(bookLoanFilePath, JSON.stringify(bookName), (err) => {
+            fs.writeFile(bookLoanFilePath, JSON.stringify(bookLoanDb), (err) => {
                 if (err) {
                     console.log(err);
                     res.writeHead(500);
@@ -281,8 +285,7 @@ const LoanBook = function (req, res){
                 res.writeHead(200)
             });
 
-            booksObj.pop(bookName)
-            
+            booksObj.splice(bookIndex, 1)             
             fs.writeFile(bookFilePath, JSON.stringify(booksObj), (err) => {
                 if (err) {
                     console.log(err);
@@ -319,38 +322,42 @@ const ReturnBook = function (req, res){
                 res.end("An error occured")
             }
             const booksObj = JSON.parse(books)
-            // const bookName = booksObj.find(book => book.title === bookTitle)
+            const bookName = booksObj.find(book => book.title === bookTitle)
+            bookId = bookName.id
+            const bookIndex = booksObj.findIndex(book => book.id === bookId)
 
-            // if (bookName === -1) {
-            //     res.writeHead(404)
-            //     res.end("Book with the specified id not found!")
-            //     return
-            // }
+            if (bookIndex === -1) {
+                res.writeHead(404)
+                res.end("Book with the specified id not found!")
+                return
+            }
 
-            // fs.writeFile(bookLoanFilePath, JSON.stringify(bookName), (err) => {
-            //     if (err) {
-            //         console.log(err);
-            //         res.writeHead(500);
-            //         res.end(JSON.stringify({
-            //             message: 'Internal Server Error. Could not save book to database.'
-            //         }));
-            //     }
-            //     res.writeHead(200)
-            // });
+            booksDb.push(bookName)
+            fs.writeFile(bookFilePath, JSON.stringify(booksDb), (err) => {
+                if (err) {
+                    console.log(err);
+                    res.writeHead(500);
+                    res.end(JSON.stringify({
+                        message: 'Internal Server Error. Could not save book to database.'
+                    }));
+                }
+                res.writeHead(200)
+            });
+      
 
-            // booksObj.pop(bookName)
+            booksObj.splice(bookIndex, 1)
             
-            // fs.writeFile(bookFilePath, JSON.stringify(booksObj), (err) => {
-            //     if (err) {
-            //         console.log(err);
-            //         res.writeHead(500);
-            //         res.end(JSON.stringify({
-            //             message: 'Internal Server Error. Could not save book to database.'
-            //         }));
-            //     }
+            fs.writeFile(bookLoanFilePath, JSON.stringify(booksObj), (err) => {
+                if (err) {
+                    console.log(err);
+                    res.writeHead(500);
+                    res.end(JSON.stringify({
+                        message: 'Internal Server Error. Could not save book to database.'
+                    }));
+                }
 
-            //     res.writeHead(200)
-            // });
+                res.writeHead(200)
+            });
 
         })
     })
@@ -364,7 +371,7 @@ server.listen(PORT, () => {
     
     booksDb = JSON.parse(fs.readFileSync(bookFilePath, 'utf8'));
     usersDb = JSON.parse(fs.readFileSync(userFilePath, 'utf8'));
-    // bookLoanDb = JSON.parse(fs.readFileSync(bookLoanFilePath, 'utf8'));
+    bookLoanDb = JSON.parse(fs.readFileSync(bookLoanFilePath, 'utf8'));
     console.log(`Server running on https://localhost:${PORT}`);
     
 })
