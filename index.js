@@ -1,6 +1,7 @@
 const http = require("http");
 const path = require("path");
 const fs = require("fs");
+const {AuthenticateUser} = require("./authenticate");
 
 
 const bookFilePath = path.join(__dirname, "db", "Books.json")
@@ -17,17 +18,40 @@ const requestHandler = function (req, res){
 
     if (req.url == "/register" && req.method == "POST") {
         CreateUser(req, res)
-    } else if(req.url === "/login" && req.method === "POST"){
-        AuthenticateUser(req, res)
     } else if(req.url === "/users" && req.method === "GET"){ 
         //Authentication
-        getAllUsers(req, res)
+        AuthenticateUser(req,res, ['admin'])
+            .then(() => {
+                getAllUsers(req,res)
+            }).catch((err) =>   {
+                res.writeHead(400)
+                res.end(JSON.stringify({
+                    message: err
+                }))
+            })
     } else if(req.url === "/books" && req.method === "POST"){
         //Authentication
-        CreateBook(req, res)
+        AuthenticateUser(req,res, ['admin'])
+            .then(() => {
+                CreateBook(req, res, book)
+            }).catch((err) =>   {
+                res.writeHead(400)
+                res.end(JSON.stringify({
+                    message: "error"
+                }))
+            })
     }else if(req.url === "/books" && req.method === "DELETE"){
         //Authentication
-        DeleteBook(req, res)
+        AuthenticateUser(req,res, ['admin'])
+            .then(() => {
+                DeleteBook(req, res)
+            }).catch((err) =>   {
+                res.writeHead(401)
+                res.end(JSON.stringify({
+                    message: "error"
+                }))
+            })
+        
     }else if(req.url === "/books" && req.method === "PUT"){
         //Authentication
         UpdateBook(req, res)
@@ -65,37 +89,6 @@ const CreateUser = function (req, res){
             res.end(JSON.stringify(newUser));
         })
 
-    })
-}
-
-const AuthenticateUser = function (req, res){
-    const body = []
-
-    req.on('data', (chunk) => {
-        body.push(chunk)
-    })
-
-    req.on('end', () => {
-        const parsedBody = Buffer.concat(body).toString()
-        if (!parsedBody){
-            res.writeHead(404)
-            res.end(JSON.stringify({
-                message: "No Username or Password Provided"
-            }))
-        }
-        const loginDetails = JSON.parse(parsedBody);
-        let userFound = usersDb.find((user) => {
-            return user.username == loginDetails.username;
-        })
-        if (!userFound){
-            res.writeHead(404)
-            res.end(JSON.stringify({
-                error: "Invalid Username or Password" 
-            })) 
-        }
-        res.writeHead(200);
-        res.end(`Welcome ${userFound.username}, you are ${userFound.role}`);
-        
     })
 }
 
