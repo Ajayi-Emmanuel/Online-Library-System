@@ -28,7 +28,7 @@ function AuthenticateUser(req, res, roles){
             if(!parsedBody){
                 reject("Please Enter your Username and Password")
             }
-            const { user: loginDetails, book } = JSON.parse(parsedBody);
+            const { user: loginDetails, boo } = JSON.parse(parsedBody);
     
             const users = await getAllUsers()
             
@@ -47,7 +47,8 @@ function AuthenticateUser(req, res, roles){
             if(!roles.includes(userFound.role)){
                 reject("You don't not have access to this feature")
             }
-            resolve(book)
+            // console.log(boo)
+            resolve()
 
         })
     })

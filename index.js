@@ -3,7 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const {AuthenticateUser} = require("./authenticate");
 
-
+// let boo;
 const bookFilePath = path.join(__dirname, "db", "Books.json")
 const userFilePath = path.join(__dirname, "db", "users.json")
 const bookLoanFilePath = path.join(__dirname, "db", "bookLoan.json")
@@ -12,8 +12,8 @@ booksDb = [];
 bookLoanDb = [];
 
 
-const PORT = 4000;
-
+const PORT = 3000; 
+ 
 const requestHandler = function (req, res){
 
     if (req.url == "/register" && req.method == "POST") {
@@ -33,13 +33,14 @@ const requestHandler = function (req, res){
         //Authentication
         AuthenticateUser(req,res, ['admin'])
             .then(() => {
-                CreateBook(req, res, book)
-            }).catch((err) =>   {
-                res.writeHead(400)
-                res.end(JSON.stringify({
-                    message: "error"
-                }))
+                CreateBook(req, res,boo)
             })
+            // .catch((err) =>   {
+            //     res.writeHead(400)
+            //     res.end(JSON.stringify({
+            //         message: "error"
+            //     }))
+            // })
     }else if(req.url === "/books" && req.method === "DELETE"){
         //Authentication
         AuthenticateUser(req,res, ['admin'])

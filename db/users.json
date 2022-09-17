@@ -22,5 +22,13 @@
         "role": "reader",
         "phoneNumber": "09032608313",
         "password": "qwert12d3."
+    },
+    {
+        "fullName": "Oluwatobioloba Enoch",
+        "username": "enoch1",
+        "email": "enoch1olugbemi@gmail.com",
+        "role": "admin",
+        "phoneNumber": "08053542379",
+        "password": "blessing1"
     }
 ]
