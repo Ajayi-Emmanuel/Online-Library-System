@@ -6,12 +6,6 @@
         "id": 1
     },
     {
-        "title": "Death of a City",
-        "author": "Amrita Pritam",
-        "Year": 1976,
-        "id": 2
-    },
-    {
         "title": "The Revenue Stamp 2",
         "author": "Amrita Pritam",
         "Year": 1980,
@@ -21,6 +15,18 @@
         "title": "Pinjar",
         "author": "Amrita Pritam",
         "Year": 1950,
+        "id": 3
+    },
+    {
+        "title": "Death of a City",
+        "author": "Amrita Pritam",
+        "Year": 1976,
+        "id": 2
+    },
+    {
+        "title": "Death of a Ciy 3",
+        "author": "me",
+        "year": 2000,
         "id": 3
     }
 ]

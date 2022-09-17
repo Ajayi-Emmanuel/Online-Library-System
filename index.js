@@ -12,7 +12,7 @@ booksDb = [];
 bookLoanDb = [];
 
 
-const PORT = 3000; 
+const PORT = 4000; 
  
 const requestHandler = function (req, res){
 
@@ -32,20 +32,19 @@ const requestHandler = function (req, res){
     } else if(req.url === "/books" && req.method === "POST"){
         //Authentication
         AuthenticateUser(req,res, ['admin'])
-            .then(() => {
-                CreateBook(req, res,boo)
+            .then((book) => {
+                CreateBook(req, res, book)
+            }).catch((err) =>   {
+                res.writeHead(400)
+                res.end(JSON.stringify({
+                    message: "error"
+                }))
             })
-            // .catch((err) =>   {
-            //     res.writeHead(400)
-            //     res.end(JSON.stringify({
-            //         message: "error"
-            //     }))
-            // })
     }else if(req.url === "/books" && req.method === "DELETE"){
         //Authentication
         AuthenticateUser(req,res, ['admin'])
-            .then(() => {
-                DeleteBook(req, res)
+            .then((book) => {
+                DeleteBook(req, res, book)
             }).catch((err) =>   {
                 res.writeHead(401)
                 res.end(JSON.stringify({
@@ -55,14 +54,38 @@ const requestHandler = function (req, res){
         
     }else if(req.url === "/books" && req.method === "PUT"){
         //Authentication
-        UpdateBook(req, res)
+        AuthenticateUser(req,res, ['admin'])
+            .then((book) => {
+                UpdateBook(req, res, book)
+            }).catch((err) =>   {
+                res.writeHead(401)
+                res.end(JSON.stringify({
+                    message: "error"
+                }))
+            })
     }else if(req.url === "/loanBook" && req.method === "POST"){
-        // res.end("Hello")
         //Authentication
-        LoanBook(req, res)
+        AuthenticateUser(req, res, ['reader'])
+            .then((book) => {
+                LoanBook(req, res, book)
+            }).catch((err) =>   {
+                res.writeHead(401)
+                res.end(JSON.stringify({
+                    message: "error"
+                }))
+            })
     }else if(req.url === "/returnBook" && req.method === "POST"){
         //Authentication
-        ReturnBook(req, res)
+        AuthenticateUser(req,res, ['reader'])
+            .then((book) => {
+                ReturnBook(req, res, book)
+            }).catch((err) =>   {
+                res.writeHead(401)
+                res.end(JSON.stringify({
+                    message: "error"
+                }))
+            })
+        
     }else{
         res.writeHead(404)
         res.end(JSON.stringify({
@@ -108,252 +131,217 @@ const getAllUsers = function (req, res){
     })
 }
 
-const CreateBook = function (req, res){
-    body = []
-    req.on('data', (chunk) => {
-        body.push(chunk)
-    })
+const CreateBook = function (req, res, newBook){
+    
+        fs.readFile(bookFilePath, "utf8", (err, data) => {
+            if (err) {
+                console.log(err)
+                res.writeHead(400)
+                res.end("An error occured")
+            }
+    
+            const oldBooks = JSON.parse(data)
+            const allBooks = [...oldBooks, newBook]
 
-    req.on('end', () => {
-        const parsedBody = Buffer.concat(body).toString()
-        const newBook = JSON.parse(parsedBody)
+            const lastBook = booksDb[booksDb.length - 1];
+            const lastBookId = lastBook.id;
+            newBook.id = lastBookId + 1;
+    
+            fs.writeFile(bookFilePath, JSON.stringify(allBooks), (err) => {
+                if (err) {
+                    console.log(err);
+                    res.writeHead(500);
+                    res.end(JSON.stringify({
+                        message: 'Internal Server Error. Could not save book to database.'
+                    }));
+                }
+    
+                res.end(JSON.stringify(newBook));
+            });
+    
+        })
+}
 
-        const lastBook = booksDb[booksDb.length - 1];
-        const lastBookId = lastBook.id;
-        newBook.id = lastBookId + 1;
+const DeleteBook = function (req, res, bookid){
 
-        //Join book to db
-        booksDb.push(newBook);
-        fs.writeFile(bookFilePath, JSON.stringify(booksDb), (err) => {
-            if (err){
+    const bookId = bookid.id
+    fs.readFile(bookFilePath, "utf8", (err, books) => {
+        if (err) {
+            console.log(err)
+            res.writeHead(400)
+            res.end("An error occured")
+        }
+        const booksObj = JSON.parse(books)
+        const bookIndex = booksObj.findIndex(book => book.id === bookId)
+
+        if (bookIndex === -1) {
+            res.writeHead(404)
+            res.end("Book with the specified id not found!")
+            return
+        }
+
+        // DELETE FUNCTION
+        booksObj.splice(bookIndex, 1)
+
+        fs.writeFile(bookFilePath, JSON.stringify(booksObj), (err) => {
+            if (err) {
                 console.log(err);
                 res.writeHead(500);
                 res.end(JSON.stringify({
-                    message: "Internal Error"
-                }))
+                    message: 'Internal Server Error. Could not save book to database.'
+                }));
             }
-            res.end(JSON.stringify(newBook));
-        })
+
+            res.writeHead(200)
+            res.end("Deletion successfull!");
+        });
 
     })
 }
 
-const DeleteBook = function (req, res){
-    const body = []
+const UpdateBook = function (req, res, update){
 
-    req.on("data", (chunk) => {
-        body.push(chunk)
-    })
+    const bookId = update.id
 
-    req.on("end", () => {
-        const parsedBook = Buffer.concat(body).toString()
-        const detailsToUpdate = JSON.parse(parsedBook)
-        const bookId = detailsToUpdate.id
+    fs.readFile(bookFilePath, "utf8", (err, books) => {
+        if (err) {
+            console.log(err)
+            res.writeHead(400)
+            res.end("An error occured")
+        }
 
-        fs.readFile(bookFilePath, "utf8", (err, books) => {
+        const booksObj = JSON.parse(books)
+
+        const bookIndex = booksObj.findIndex(book => book.id === bookId)
+
+        if (bookIndex === -1) {
+            res.writeHead(404)
+            res.end("Book with the specified id not found!")
+            return
+        }
+
+        const updatedBook = { ...booksObj[bookIndex], ...update }
+        booksObj[bookIndex] = updatedBook
+
+        fs.writeFile(bookFilePath, JSON.stringify(booksObj), (err) => {
             if (err) {
-                console.log(err)
-                res.writeHead(400)
-                res.end("An error occured")
+                console.log(err);
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    message: 'Internal Server Error. Could not save book to database.'
+                }));
             }
 
-            const booksObj = JSON.parse(books)
-            const bookIndex = booksObj.findIndex(book => book.id === bookId)
-
-            if (bookIndex === -1) {
-                res.writeHead(404)
-                res.end("Book with the specified id not found!")
-                return
-            }
-
-            // DELETE FUNCTION
-            booksObj.splice(bookIndex, 1)
-
-            fs.writeFile(bookFilePath, JSON.stringify(booksObj), (err) => {
-                if (err) {
-                    console.log(err);
-                    res.writeHead(500);
-                    res.end(JSON.stringify({
-                        message: 'Internal Server Error. Could not save book to database.'
-                    }));
-                }
-
-                res.writeHead(200)
-                res.end("Deletion successfull!");
-            });
-
-        })
+            res.writeHead(200)
+            res.end("Update successfull!");
+        });
 
     })
 }
 
-const UpdateBook = function (req, res){
-    const body = []
+const LoanBook = function (req, res, bookloan){
 
-    req.on("data", (chunk) => {
-        body.push(chunk)
-    })
+    const bookTitle = bookloan.title
 
-    req.on("end", () => {
-        const parsedBook = Buffer.concat(body).toString()
-        const detailsToUpdate = JSON.parse(parsedBook)
-        const bookId = detailsToUpdate.id
+    fs.readFile(bookFilePath, "utf8", (err, books) => {
+        if (err) {
+            console.log(err)
+            res.writeHead(400)
+            res.end("An error occured")
+        }
 
-        fs.readFile(bookFilePath, "utf8", (err, books) => {
-            if (err) {
-                console.log(err)
-                res.writeHead(400)
-                res.end("An error occured")
-            }
+        const booksObj = JSON.parse(books)
+        const bookdetails = booksObj.find(book => book.title === bookTitle)
+        const bookId = bookdetails.id
+        const bookIndex = booksObj.findIndex(book => book.id === bookId)
 
-            const booksObj = JSON.parse(books)
-
-            const bookIndex = booksObj.findIndex(book => book.id === bookId)
-
-            if (bookIndex === -1) {
-                res.writeHead(404)
-                res.end("Book with the specified id not found!")
-                return
-            }
-
-            const updatedBook = { ...booksObj[bookIndex], ...detailsToUpdate }
-            booksObj[bookIndex] = updatedBook
-
-            fs.writeFile(bookFilePath, JSON.stringify(booksObj), (err) => {
-                if (err) {
-                    console.log(err);
-                    res.writeHead(500);
-                    res.end(JSON.stringify({
-                        message: 'Internal Server Error. Could not save book to database.'
-                    }));
-                }
-
-                res.writeHead(200)
-                res.end("Update successfull!");
-            });
-
-        })
-
-    })
-}
-
-const LoanBook = function (req, res){
-    const body = []
-
-    req.on("data", (chunk) => {
-        body.push(chunk)
-    })
-
-    req.on("end", () => {
-        const parsedBook = Buffer.concat(body).toString()
-        const bookToLoan = JSON.parse(parsedBook)
-        const bookTitle = bookToLoan.title
-  
-        fs.readFile(bookFilePath, "utf8", (err, books) => {
-            if (err) {
-                console.log(err)
-                res.writeHead(400)
-                res.end("An error occured")
-            }
-
-            const booksObj = JSON.parse(books)
-            const bookName = booksObj.find(book => book.title === bookTitle)
-            bookId = bookName.id
-            const bookIndex = booksObj.findIndex(book => book.id === bookId)
-
-            if (bookIndex === -1) {
-                res.writeHead(404)
-                res.end("Book with the specified id not found!")
-                return
-            }
-            
-            bookLoanDb.push(bookName);
-            fs.writeFile(bookLoanFilePath, JSON.stringify(bookLoanDb), (err) => {
-                if (err) {
-                    console.log(err);
-                    res.writeHead(500);
-                    res.end(JSON.stringify({
-                        message: 'Internal Server Error. Could not save book to database.'
-                    }));
-                }
-                res.writeHead(200)
-            });
-
-            booksObj.splice(bookIndex, 1)             
-            fs.writeFile(bookFilePath, JSON.stringify(booksObj), (err) => {
-                if (err) {
-                    console.log(err);
-                    res.writeHead(500);
-                    res.end(JSON.stringify({
-                        message: 'Internal Server Error. Could not save book to database.'
-                    }));
-                }
-
-                res.writeHead(200)
-            });
-
-        })
-    })
-
-}
-
-const ReturnBook = function (req, res){
-    const body = []
-
-    req.on("data", (chunk) => {
-        body.push(chunk)
-    })
-
-    req.on("end", () => {
-        const parsedBook = Buffer.concat(body).toString()
-        const bookToReturn = JSON.parse(parsedBook)
-        const bookTitle = bookToReturn.title
+        if (bookIndex === -1) {
+            res.writeHead(404)
+            res.end("Book with the specified id not found!")
+            return
+        }
         
-        fs.readFile(bookLoanFilePath, "utf8", (err, books) => {
+        bookLoanDb.push(bookdetails);
+        fs.writeFile(bookLoanFilePath, JSON.stringify(bookLoanDb), (err) => {
             if (err) {
-                console.log(err)
-                res.writeHead(400)
-                res.end("An error occured")
+                console.log(err);
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    message: 'Internal Server Error. Could not save book to database.'
+                }));
             }
-            const booksObj = JSON.parse(books)
-            const bookName = booksObj.find(book => book.title === bookTitle)
-            bookId = bookName.id
-            const bookIndex = booksObj.findIndex(book => book.id === bookId)
+            res.writeHead(200)
+        });
 
-            if (bookIndex === -1) {
-                res.writeHead(404)
-                res.end("Book with the specified id not found!")
-                return
+        booksObj.splice(bookIndex, 1)             
+        fs.writeFile(bookFilePath, JSON.stringify(booksObj), (err) => {
+            if (err) {
+                console.log(err);
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    message: 'Internal Server Error. Could not save book to database.'
+                }));
             }
 
-            booksDb.push(bookName)
-            fs.writeFile(bookFilePath, JSON.stringify(booksDb), (err) => {
-                if (err) {
-                    console.log(err);
-                    res.writeHead(500);
-                    res.end(JSON.stringify({
-                        message: 'Internal Server Error. Could not save book to database.'
-                    }));
-                }
-                res.writeHead(200)
-            });
-      
+            res.writeHead(200)
+            res.end("Loan Successful")
+        });
 
-            booksObj.splice(bookIndex, 1)
+    })
+
+}
+
+const ReturnBook = function (req, res, bookToReturn){
+    
+    const bookTitle = bookToReturn.title;
+
+    fs.readFile(bookLoanFilePath, "utf8", (err, books) => {
+        if (err) {
+            console.log(err)
+            res.writeHead(400)
+            res.end("An error occured")
+        }
+        const booksObj = JSON.parse(books)
+        const bookdetails = booksObj.find(book => book.title === bookTitle)
+        bookId = bookdetails.id
+        const bookIndex = booksObj.findIndex(book => book.id === bookId)
+
+        if (bookIndex === -1) {
+            res.writeHead(404)
+            res.end("Book with the specified id not found!")
+            return
+        }
+
+        booksDb.push(bookdetails)
+        fs.writeFile(bookFilePath, JSON.stringify(booksDb), (err) => {
+            if (err) {
+                console.log(err);
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    message: 'Internal Server Error. Could not save book to database.'
+                }));
+            }
+            res.writeHead(200)
+        });
+  
+
+        booksObj.splice(bookIndex, 1)
+        
+        fs.writeFile(bookLoanFilePath, JSON.stringify(booksObj), (err) => {
+            if (err) {
+                console.log(err);
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    message: 'Internal Server Error. Could not save book to database.'
+                }));
+            }
+
             
-            fs.writeFile(bookLoanFilePath, JSON.stringify(booksObj), (err) => {
-                if (err) {
-                    console.log(err);
-                    res.writeHead(500);
-                    res.end(JSON.stringify({
-                        message: 'Internal Server Error. Could not save book to database.'
-                    }));
-                }
+            
+        });
+        res.writeHead(200)
+        res.end("Book has been Returned")
 
-                res.writeHead(200)
-            });
-
-        })
     })
 }
 
