@@ -1,0 +1,34 @@
+[
+    {
+        "fullName": "Ajayi Emmanuel",
+        "username": "Emmanuel101",
+        "email": "emmanueltemitayo056@gmail.com",
+        "role": "admin",
+        "phoneNumber": "09032608313",
+        "password": "qwerty23."
+    },
+    {
+        "fullName": "Ajayi Tosin",
+        "username": "Tosin101",
+        "email": "ajayitosin056@gmail.com",
+        "role": "reader",
+        "phoneNumber": "09032608313",
+        "password": "qwert21."
+    },
+    {
+        "fullName": "Ajayi Mosunmola",
+        "username": "MJ_Designs",
+        "email": "mosunmolajoy@gmail.com",
+        "role": "reader",
+        "phoneNumber": "09032608313",
+        "password": "qwert12d3."
+    },
+    {
+        "fullName": "Oluwatobioloba Enoch",
+        "username": "enoch1",
+        "email": "enoch1olugbemi@gmail.com",
+        "role": "admin",
+        "phoneNumber": "08053542379",
+        "password": "blessing1"
+    }
+]

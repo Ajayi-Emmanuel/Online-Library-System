@@ -3,7 +3,6 @@ const path = require("path");
 const fs = require("fs");
 const {AuthenticateUser} = require("./authenticate");
 
-// let boo;
 const bookFilePath = path.join(__dirname, "db", "Books.json")
 const userFilePath = path.join(__dirname, "db", "users.json")
 const bookLoanFilePath = path.join(__dirname, "db", "bookLoan.json")
@@ -12,7 +11,7 @@ booksDb = [];
 bookLoanDb = [];
 
 
-const PORT = 4000; 
+const PORT = 3000; 
  
 const requestHandler = function (req, res){
 
@@ -31,13 +30,13 @@ const requestHandler = function (req, res){
             })
     } else if(req.url === "/books" && req.method === "POST"){
         //Authentication
-        AuthenticateUser(req,res, ['admin'])
+        AuthenticateUser(req, res, ['admin'])
             .then((book) => {
                 CreateBook(req, res, book)
             }).catch((err) =>   {
                 res.writeHead(400)
                 res.end(JSON.stringify({
-                    message: "error"
+                    message: "book error"
                 }))
             })
     }else if(req.url === "/books" && req.method === "DELETE"){
@@ -321,9 +320,9 @@ const ReturnBook = function (req, res, bookToReturn){
                     message: 'Internal Server Error. Could not save book to database.'
                 }));
             }
-            res.writeHead(200)
+            
         });
-  
+        res.writeHead(200)
 
         booksObj.splice(bookIndex, 1)
         
