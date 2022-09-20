@@ -192,7 +192,7 @@ const DeleteBook = function (req, res, bookid){
             }
 
             res.writeHead(200)
-            res.end("Deletion successfull!");
+            res.end("Deletion successful!");
         });
 
     })
