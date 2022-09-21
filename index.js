@@ -154,7 +154,7 @@ const CreateBook = function (req, res, newBook){
                         message: 'Internal Server Error. Could not save book to database.'
                     }));
                 }
-    
+                res.writeHead(201)
                 res.end(JSON.stringify(newBook));
             });
     
@@ -232,7 +232,7 @@ const UpdateBook = function (req, res, update){
             }
 
             res.writeHead(200)
-            res.end("Update successfull!");
+            res.end("Update successful!");
         });
 
     })
